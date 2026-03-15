@@ -236,6 +236,38 @@
         .admin-added-item-del { background:transparent; border:none; color:#e55; cursor:pointer; font-size:16px; padding:0 4px; }
         .admin-export-box { width:100%; min-height:140px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:14px; color:#7cf; font-family:monospace; font-size:12px; direction:ltr; text-align:left; resize:vertical; box-sizing:border-box; }
         @media(max-width:600px) { .admin-form-grid { grid-template-columns:1fr; } .admin-search-row { flex-direction:column; } }
+        /* ===== TICKER ===== */
+        .ticker-bar { background: rgba(5,5,7,0.95); border-bottom: 1px solid rgba(201,168,76,0.2); display: flex; align-items: center; gap: 0; overflow: hidden; height: 52px; position: sticky; top: 60px; z-index: 90; }
+        .ticker-label { background: var(--gold); color: #000; font-size: 11px; font-weight: 900; padding: 0 16px; height: 100%; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; letter-spacing: 1px; }
+        .ticker-track-wrap { flex: 1; overflow: hidden; height: 100%; position: relative; }
+        .ticker-track { display: flex; align-items: center; gap: 0; height: 100%; white-space: nowrap; animation: tickerScroll 30s linear infinite; width: max-content; }
+        .ticker-track:hover { animation-play-state: paused; }
+        @keyframes tickerScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ticker-item { display: inline-flex; align-items: center; gap: 10px; padding: 0 24px; cursor: pointer; transition: background 0.2s; height: 100%; border-right: 1px solid rgba(255,255,255,0.06); }
+        .ticker-item:hover { background: rgba(201,168,76,0.08); }
+        .ticker-item img { width: 28px; height: 40px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+        .ticker-item-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .ticker-item-meta { font-size: 11px; color: var(--gold); margin-right: 6px; }
+        .admin-seasons-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+        .admin-season-row { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+        .admin-season-header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; user-select: none; }
+        .admin-season-header:hover { background: rgba(255,255,255,0.03); }
+        .admin-season-name { font-size: 13px; font-weight: 700; color: var(--gold); flex: 1; }
+        .admin-season-eps-count { font-size: 12px; color: var(--text-muted); }
+        .admin-season-eps-count span { color: #4caf7d; font-weight: 700; }
+        .admin-season-toggle { color: var(--text-muted); font-size: 12px; transition: transform 0.2s; }
+        .admin-season-toggle.open { transform: rotate(180deg); }
+        .admin-season-body { display: none; padding: 0 14px 14px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .admin-season-body.open { display: block; }
+        .admin-eps-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; max-height: 300px; overflow-y: auto; }
+        .admin-ep-row { display: flex; align-items: center; gap: 8px; }
+        .admin-ep-num { font-size: 11px; color: var(--gold); font-weight: 700; min-width: 55px; flex-shrink: 0; }
+        .admin-ep-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 7px 10px; color: var(--text-primary); font-family: 'Cairo',sans-serif; font-size: 12px; direction: ltr; outline: none; transition: border 0.2s; }
+        .admin-ep-input:focus { border-color: rgba(201,168,76,0.5); }
+        .admin-ep-input::placeholder { color: rgba(255,255,255,0.2); font-size: 11px; }
+        .admin-season-paste-btn { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); border-radius: 6px; padding: 5px 10px; font-family: 'Cairo',sans-serif; font-size: 11px; cursor: pointer; white-space: nowrap; transition: all 0.2s; margin-top: 8px; }
+        .admin-season-paste-btn:hover { background: rgba(201,168,76,0.2); }
+        .admin-type-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -244,6 +276,13 @@
     <div class="logo" id="siteLogo">VÉRANO <span>VIP</span></div>
     <div class="header-badge">▶ STREAMING</div>
 </header>
+
+<div class="ticker-bar" id="tickerBar">
+    <div class="ticker-label">🆕 آخر الإضافات</div>
+    <div class="ticker-track-wrap">
+        <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+</div>
 
 <!-- Admin Password Modal -->
 <div class="admin-overlay" id="adminOverlay">
@@ -282,8 +321,11 @@
             <div class="admin-selected-info" id="adminSelectedInfo"></div>
             <div class="admin-form-grid">
                 <div class="admin-form-group">
-                    <label>رابط الفيديو (embed URL)</label>
-                    <input type="text" class="admin-input" id="adminEmbedUrl" placeholder="https://highstream.tv/embed-...">
+                    <label>النوع</label>
+                    <select class="admin-select" id="adminTypeSelect">
+                        <option value="أفلام">🎬 فيلم</option>
+                        <option value="مسلسلات">📺 مسلسل</option>
+                    </select>
                 </div>
                 <div class="admin-form-group">
                     <label>التصنيف</label>
@@ -295,9 +337,9 @@
                         <option value="مغامرة">مغامرة</option>
                     </select>
                 </div>
-                <div class="admin-form-group" id="adminSeasonsGroup" style="display:none">
-                    <label>عدد المواسم</label>
-                    <input type="number" class="admin-input" id="adminSeasonsCount" min="1" value="1">
+                <div class="admin-form-group">
+                    <label>رابط الفيديو (embed URL)</label>
+                    <input type="text" class="admin-input" id="adminEmbedUrl" placeholder="https://highstream.tv/embed-...">
                 </div>
                 <div class="admin-form-group">
                     <label>مميز في السليدر؟</label>
@@ -306,6 +348,10 @@
                         <option value="false">لا</option>
                     </select>
                 </div>
+            </div>
+            <div id="adminSeasonsSection" style="display:none">
+                <div class="admin-section-title" style="margin-top:8px">📺 المواسم والحلقات</div>
+                <div id="adminSeasonsList"></div>
             </div>
             <div class="admin-form-actions">
                 <button class="admin-btn-primary" id="adminAddBtn">✚ إضافة للقائمة</button>
@@ -417,6 +463,12 @@
     </div>
 </div>
 
+<div id="loadingOverlay" style="display:none;position:fixed;inset:0;z-index:99997;background:#050507;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+    <div style="color:#C9A84C;font-size:22px;font-weight:900;font-family:'Cairo',sans-serif;">VÉRANO VIP</div>
+    <div class="loader-ring"></div>
+    <div style="color:rgba(240,235,224,0.5);font-size:13px;font-family:'Cairo',sans-serif;">جاري تحميل المحتوى...</div>
+</div>
+
 <div class="share-popup" id="sharePopup">
     <div class="share-popup-backdrop" onclick="closeSharePopup()"></div>
     <div class="share-popup-box">
@@ -440,6 +492,7 @@
         <div class="share-hint">فيسبوك: ينشر النص مباشرة · انستجرام: ينسخ النص ويفتح التطبيق</div>
     </div>
 </div>
+</div>
 
 <script>
 (function() {
@@ -453,134 +506,110 @@
         return arr;
     }
 
-    window.movies = [
-        {title:"أخي فوق الشجرة", url:"https:"+"//"+"highstream.tv/embed-64l8mpuz3yp6.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"أفلام", year:"2023", description:"كوميديا اجتماعية مليئة بالمواقف الطريفة", featured:true},
-        {title:"فوي! فوي! فوي!", url:"https:"+"//"+"highstream.tv/embed-1uy60kmvrzte.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"أفلام", year:"2023", description:"فيلم كوميدي خفيف يقدم الضحك والترفيه في قالب عصري"},
-        {title:"وش في وش", url:"https:"+"//"+"highstream.tv/embed-8a7tnlo98fbs.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"أفلام", year:"2023", description:"فيلم أكشن مثير يجمع بين الإثارة والتشويق", featured:true},
-        {title:"الاسكندران", url:"https:"+"//"+"highstream.tv/embed-wl7xukeser83.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"أفلام", year:"2023", description:"دراما اجتماعية تعكس الواقع المصري بأسلوب سينمائي راقي"},
-        {title:"ابو نسب", url:"https:"+"//"+"highstream.tv/embed-2ibutwtq0fqg.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"أفلام", year:"2023", description:"كوميديا عائلية تدور حول مواقف طريفة في الحياة اليومية"},
-        {title:"مرعى البريمو", url:"https:"+"//"+"highstream.tv/embed-82xol5lsszq3.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"أفلام", year:"2023", description:"كوميديا ساخرة تناقش قضايا المجتمع بأسلوب فكاهي"},
-        {title:"العميل صفر", url:"https:"+"//"+"highstream.tv/embed-londof4i0r9e.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"أفلام", year:"2023", description:"فيلم تجسس وأكشن مليء بالإثارة والمطاردات", featured:true},
-        {title:"الحريفه", url:"https:"+"//"+"highstream.tv/embed-b777la1525is.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"أفلام", year:"2023", description:"كوميديا نسائية تسلط الضوء على المرأة القوية في المجتمع"},
-        {title:"سكر", url:"https:"+"//"+"wolfstream.tv/embed-snpj72y5jysl.html", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"رومانسي", type:"أفلام", year:"2023", description:"قصة حب رومانسية تجمع بين الكوميديا والدراما", featured:true},
-        {title:"الكنز", url:"https:"+"//"+"example.com/movie1", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"مغامرة", type:"أفلام", year:"2022", description:"مغامرة استكشافية مثيرة في رحلة البحث عن كنز أسطوري", featured:true},
-        {title:"الفيل الأزرق 2", url:"https:"+"//"+"example.com/movie2", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"أفلام", year:"2019", description:"الجزء الثاني من الفيلم الشهير، دراما نفسية مليئة بالتشويق"},
-        {title:"الممر", url:"https:"+"//"+"example.com/movie3", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"أفلام", year:"2019", description:"فيلم حربي يروي قصة بطولية من تاريخ مصر الحديث"},
-        {title:"كيرة والجن", url:"https:"+"//"+"example.com/movie4", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"مغامرة", type:"أفلام", year:"2022", description:"مغامرة فانتازية تجمع بين الخيال والواقع في قصة مشوقة"},
-        {title:"البدلة", url:"https:"+"//"+"example.com/movie5", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"أفلام", year:"2018", description:"كوميديا سوداء تناقش قضايا الفساد بأسلوب ساخر"},
-        {title:"الخلية", url:"https:"+"//"+"example.com/movie6", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"أفلام", year:"2017", description:"إثارة وتشويق في مواجهة الإرهاب والمؤامرات"},
-        {title:"قلب الأسد", url:"https:"+"//"+"example.com/movie7", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"أفلام", year:"2013", description:"أكشن مصري من طراز عالمي في قصة انتقام مثيرة"},
-        {title:"الفيل الأزرق", url:"https:"+"//"+"example.com/movie8", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"أفلام", year:"2014", description:"دراما نفسية تأخذك في رحلة داخل العقل البشري"},
-        {title:"تراب الماس", url:"https:"+"//"+"example.com/movie9", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"أفلام", year:"2018", description:"دراما اجتماعية تناقش الطبقية والصراع من أجل البقاء"},
-        {title:"أسماء", url:"https:"+"//"+"example.com/movie10", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"رومانسي", type:"أفلام", year:"2022", description:"قصة حب عميقة تتحدى الظروف والصعاب"},
-        {title:"توأم روحي", url:"https:"+"//"+"example.com/movie11", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"رومانسي", type:"أفلام", year:"2020", description:"رومانسية حالمة عن البحث عن النصف الآخر"},
-        
-        
-        {title:"لعبة نيوتن", url:"https:"+"//"+"vikingfile.com/f/v3DxE0gEh9", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"مسلسلات", year:"2024", description:"مسلسل درامي يجمع بين التشويق والإثارة في قصة مليئة بالألغاز", featured:true, seasons:[
-            {name:"الموسم الأول", year:"2024", eps:[
-                "https:"+"//vikingfile.com/f/ضع_رابط_الحلقة_1_هنا",
-                "https:"+"//vikingfile.com/f/ضع_رابط_الحلقة_2_هنا",
-                "https:"+"//vikingfile.com/f/ضع_رابط_الحلقة_3_هنا"
-            ]}
-        ]},
-        {title:"جعفر العمدة", url:"https:"+"//"+"example.com/series2", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"مسلسلات", year:"2023", description:"كوميديا خفيفة تدور أحداثها في القرية المصرية", featured:true, seasons:[
-            {name:"الموسم الأول", year:"2021", eps:[
-                "https:"+"//highstream.tv/embed-XXXXXX1.html",
-                "https:"+"//highstream.tv/embed-XXXXXX2.html",
-                "https:"+"//highstream.tv/embed-XXXXXX3.html"
-            ]},
-            {name:"الموسم الثاني", year:"2022", eps:[
-                "https:"+"//highstream.tv/embed-YYYYYY1.html",
-                "https:"+"//highstream.tv/embed-YYYYYY2.html",
-                "https:"+"//highstream.tv/embed-YYYYYY3.html"
-            ]},
-            {name:"الموسم الثالث", year:"2023", eps:[
-                "https:"+"//highstream.tv/embed-ZZZZZZ1.html",
-                "https:"+"//highstream.tv/embed-ZZZZZZ2.html",
-                "https:"+"//highstream.tv/embed-ZZZZZZ3.html"
-            ]}
-        ]},
-        {title:"الاختيار 3", url:"https:"+"//"+"example.com/series3", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"مسلسلات", year:"2023", description:"الجزء الثالث من السلسلة الشهيرة، قصة بطولة وتضحية", featured:true, seasons:[
-            {name:"الموسم الأول", year:"2021", eps:[
-                "https:"+"//example.com/s3s1/ep1",
-                "https:"+"//example.com/s3s1/ep2",
-                "https:"+"//example.com/s3s1/ep3"
-            ]},
-            {name:"الموسم الثاني", year:"2022", eps:[
-                "https:"+"//example.com/s3s2/ep1",
-                "https:"+"//example.com/s3s2/ep2",
-                "https:"+"//example.com/s3s2/ep3"
-            ]},
-            {name:"الموسم الثالث", year:"2023", eps:[
-                "https:"+"//example.com/s3s3/ep1",
-                "https:"+"//example.com/s3s3/ep2",
-                "https:"+"//example.com/s3s3/ep3"
-            ]}
-        ]},
-        {title:"ملوك الجدعنة", url:"https:"+"//"+"example.com/series4", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"مسلسلات", year:"2023", description:"مسلسل درامي يتناول قصص الصداقة والولاء", featured:true, seasons:[
-            {name:"الموسم الأول", year:"2023", eps:[
-                "https:"+"//example.com/s4s1/ep1",
-                "https:"+"//example.com/s4s1/ep2",
-                "https:"+"//example.com/s4s1/ep3"
-            ]}
-        ]},
-        {title:"الهرشة السابعة", url:"https:"+"//"+"example.com/series5", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"كوميدي", type:"مسلسلات", year:"2023", description:"كوميديا اجتماعية تناقش قضايا الشباب بأسلوب خفيف", seasons:[
-            {name:"الموسم الأول", year:"2023", eps:[
-                "https:"+"//example.com/s5s1/ep1",
-                "https:"+"//example.com/s5s1/ep2",
-                "https:"+"//example.com/s5s1/ep3"
-            ]}
-        ]},
-        {title:"ضي", url:"https:"+"//"+"example.com/series6", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"مسلسلات", year:"2023", description:"دراما اجتماعية تسلط الضوء على الأمل في وسط الظلام", seasons:[
-            {name:"الموسم الأول", year:"2023", eps:[
-                "https:"+"//example.com/s6s1/ep1",
-                "https:"+"//example.com/s6s1/ep2",
-                "https:"+"//example.com/s6s1/ep3"
-            ]}
-        ]},
-        {title:"موسى", url:"https:"+"//"+"example.com/series7", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"أكشن", type:"مسلسلات", year:"2021", description:"مسلسل أكشن ملحمي يروي قصة بطولية", featured:true, seasons:[
-            {name:"الموسم الأول", year:"2021", eps:[
-                "https:"+"//example.com/s7s1/ep1",
-                "https:"+"//example.com/s7s1/ep2",
-                "https:"+"//example.com/s7s1/ep3"
-            ]}
-        ]},
-        {title:"الملك", url:"https:"+"//"+"example.com/series8", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"مسلسلات", year:"2022", description:"دراما تاريخية تروي قصة حاكم عظيم في فترة تاريخية مهمة", seasons:[
-            {name:"الموسم الأول", year:"2022", eps:[
-                "https:"+"//example.com/s8s1/ep1",
-                "https:"+"//example.com/s8s1/ep2",
-                "https:"+"//example.com/s8s1/ep3"
-            ]}
-        ]},
-        {title:"بابل", url:"https:"+"//"+"example.com/series9", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"مغامرة", type:"مسلسلات", year:"2022", description:"مغامرة ملحمية عبر الزمن في رحلة البحث عن الحقيقة", seasons:[
-            {name:"الموسم الأول", year:"2022", eps:[
-                "https:"+"//example.com/s9s1/ep1",
-                "https:"+"//example.com/s9s1/ep2",
-                "https:"+"//example.com/s9s1/ep3"
-            ]}
-        ]},
-        {title:"فاتن أمل حربي", url:"https:"+"//"+"example.com/series10", poster:"https:"+"//"+"www.raed.net/img?id=1524012", category:"دراما", type:"مسلسلات", year:"2022", description:"دراما تاريخية تروي قصة شخصية حقيقية ملهمة", seasons:[
-            {name:"الموسم الأول", year:"2022", eps:[
-                "https:"+"//example.com/s10s1/ep1",
-                "https:"+"//example.com/s10s1/ep2",
-                "https:"+"//example.com/s10s1/ep3"
-            ]}
-        ]}
-    ];
-    var movies = window.movies;
+    var SHEET_ID = '1jRikC8WAjXIGSSKuDfdpMTR1FECWdQFxKnpyGOuEM6E';
+    var SHEET_URL = 'https:' + '//' + 'docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&sheet=Sheet1';
 
-    window.featuredItems = movies.filter(function(m){ return m.featured; }).slice(0,10);
-    var featuredItems = window.featuredItems;
-    if (featuredItems.length < 5) {
-        var sorted = movies.slice().sort(function(a,b){ return b.year - a.year; });
-        var extras = sorted.filter(function(m){ return !m.featured; }).slice(0, 10 - featuredItems.length);
-        featuredItems = featuredItems.concat(extras);
+    var localMovies = [];
+
+    function parseCSV(csv) {
+        var lines = csv.trim().split('\n');
+        if (lines.length < 2) return [];
+        var headers = lines[0].split(',').map(function(h){ return h.replace(/^[\s"]+|[\s"]+$/g,'').trim().toLowerCase(); });
+        var results = [];
+        for (var i = 1; i < lines.length; i++) {
+            var cols = [];
+            var cur = ''; var inQ = false;
+            for (var c = 0; c < lines[i].length; c++) {
+                var ch = lines[i][c];
+                if (ch === '"') { inQ = !inQ; }
+                else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+                else { cur += ch; }
+            }
+            cols.push(cur.trim());
+            var obj = {};
+            headers.forEach(function(h, idx) { obj[h] = (cols[idx] || '').replace(/^"|"$/g,'').trim(); });
+            if (!obj.title) continue;
+            var movie = {
+                title: obj.title,
+                url: obj.url || '',
+                poster: obj.poster || ('https:' + '//' + 'www.raed.net/img?id=1524012'),
+                category: obj.category || 'دراما',
+                type: obj.type || 'أفلام',
+                year: obj.year || '2024',
+                description: obj.description || '',
+                featured: obj.featured === 'true' || obj.featured === '1'
+            };
+            if (obj.type === 'مسلسلات' && obj.seasons) {
+                try { movie.seasons = JSON.parse(obj.seasons); } catch(e) { movie.seasons = [{name:'الموسم الأول', year:obj.year, eps:[]}]; }
+            }
+            results.push(movie);
+        }
+        return results;
     }
+
+    function initApp(moviesData) {
+        window.movies = moviesData || [];
+        var movies = window.movies;
+        window.featuredItems = movies.filter(function(m){ return m.featured; }).slice(0,10);
+        if (window.featuredItems.length < 5) {
+            var sorted = movies.slice().sort(function(a,b){ return b.year - a.year; });
+            var extras = sorted.filter(function(m){ return !m.featured; }).slice(0, 10 - window.featuredItems.length);
+            window.featuredItems = window.featuredItems.concat(extras);
+        }
+        if (movies.length > 0) {
+            buildSlider();
+            buildTicker();
+        } else {
+            document.querySelector('.hero').style.display = 'none';
+            document.getElementById('tickerBar').style.display = 'none';
+        }
+        renderGrid();
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    fetch(SHEET_URL)
+        .then(function(r){ return r.text(); })
+        .then(function(csv){
+            var parsed = parseCSV(csv);
+            initApp(parsed.length > 0 ? parsed : localMovies);
+        })
+        .catch(function(){
+            initApp(localMovies);
+        });
 
     var currentSlide = 0;
     var autoSlideTimer;
+    var movies = window.movies || [];
+    var featuredItems = window.featuredItems || [];
+
+    function buildTicker() {
+        var movies = window.movies || [];
+        var track = document.getElementById('tickerTrack');
+        if (!track || movies.length === 0) return;
+        var items = movies.slice().reverse().slice(0, 20);
+        var html = '';
+        items.forEach(function(m) {
+            html += '<div class="ticker-item" data-title="' + m.title + '">' +
+                '<img src="' + m.poster + '" alt="' + m.title + '">' +
+                '<span class="ticker-item-title">' + m.title + '</span>' +
+                '<span class="ticker-item-meta">' + m.year + ' · ' + m.type + '</span>' +
+                '</div>';
+        });
+        track.innerHTML = html + html;
+        track.querySelectorAll('.ticker-item').forEach(function(el) {
+            el.addEventListener('click', function() {
+                var title = this.dataset.title;
+                var movie = (window.movies || []).find(function(m){ return m.title === title; });
+                if (movie) window.openModal(movie);
+            });
+        });
+        var duration = Math.max(20, items.length * 4);
+        track.style.animationDuration = duration + 's';
+    }
 
     function buildSlider() {
+        var featuredItems = window.featuredItems || [];
         var track = document.getElementById('sliderTrack');
         var dotsWrap = document.getElementById('sliderDots');
         featuredItems.forEach(function(item, i) {
@@ -617,6 +646,7 @@
     function goToSlide(index) {
         var slides = document.querySelectorAll('.slide');
         var dots = document.querySelectorAll('.slider-dot');
+        if (!slides.length) return;
         slides[currentSlide].classList.remove('active');
         dots[currentSlide].classList.remove('active');
         currentSlide = ((index % slides.length) + slides.length) % slides.length;
@@ -636,6 +666,7 @@
     var searchTerm = '';
 
     function renderGrid() {
+        var movies = window.movies || [];
         var grid = document.getElementById('moviesGrid');
         var noResults = document.getElementById('noResults');
         var filtered = movies.filter(function(m) {
@@ -644,7 +675,15 @@
             return catMatch && searchMatch;
         });
         grid.innerHTML = '';
-        if (filtered.length === 0) { noResults.classList.add('show'); return; }
+        if (filtered.length === 0) {
+            noResults.classList.add('show');
+            if (movies.length === 0) {
+                noResults.querySelector('p').textContent = 'لا يوجد محتوى بعد — أضف من لوحة الإدارة';
+            } else {
+                noResults.querySelector('p').textContent = 'لم يتم العثور على نتائج';
+            }
+            return;
+        }
         noResults.classList.remove('show');
         filtered.forEach(function(m, i) {
             var card = document.createElement('div');
@@ -1149,23 +1188,142 @@
         var year = (item.release_date || item.first_air_date || '').substring(0,4);
         var poster = item.poster_path ? TMDB_IMG + item.poster_path : '';
         var desc = item.overview || '';
-        adminSelected = { title:title, year:year, poster:poster, description:desc, type:type, id:item.id };
-        document.getElementById('adminSeasonsGroup').style.display = type === 'tv' ? 'flex' : 'none';
+        adminSelected = { title:title, year:year, poster:poster, description:desc, type:type, id:item.id, seasons:[] };
+
+        var typeSelect = document.getElementById('adminTypeSelect');
+        typeSelect.value = type === 'movie' ? 'أفلام' : 'مسلسلات';
+
         var info = document.getElementById('adminSelectedInfo');
+        var typeBadge = type === 'movie' ? '🎬 فيلم' : '📺 مسلسل';
         info.innerHTML = (poster ? '<img src="' + poster + '" class="admin-selected-poster" alt="">' : '') +
-            '<div class="admin-selected-details"><div class="admin-selected-title">' + title + '</div><div class="admin-selected-meta">' + year + ' · ' + (type==='movie'?'فيلم':'مسلسل') + '</div></div>';
+            '<div class="admin-selected-details">' +
+            '<div class="admin-type-badge">' + typeBadge + '</div>' +
+            '<div class="admin-selected-title">' + title + '</div>' +
+            '<div class="admin-selected-meta">' + year + (item.vote_average ? ' · ⭐ ' + item.vote_average.toFixed(1) : '') + '</div>' +
+            '</div>';
+
         document.getElementById('adminFormSection').style.display = 'block';
         document.getElementById('adminEmbedUrl').value = '';
+
+        var seasonsSection = document.getElementById('adminSeasonsSection');
+        var seasonsList = document.getElementById('adminSeasonsList');
+        seasonsSection.style.display = 'none';
+        seasonsList.innerHTML = '';
+
+        if (type === 'tv') {
+            var loadingEl = document.createElement('div');
+            loadingEl.style.cssText = 'color:var(--text-muted);font-size:13px;padding:10px 0;';
+            loadingEl.textContent = '⏳ جاري تحميل بيانات المواسم...';
+            seasonsSection.style.display = 'block';
+            seasonsList.appendChild(loadingEl);
+
+            var tvUrl = 'https:' + '//' + 'api.themoviedb.org/3/tv/' + item.id + '?api_key=' + TMDB_KEY + '&language=ar';
+            fetch(tvUrl).then(function(r){ return r.json(); }).then(function(tvData) {
+                seasonsList.innerHTML = '';
+                var seasons = (tvData.seasons || []).filter(function(s){ return s.season_number > 0; });
+                adminSelected.seasons = seasons.map(function(s) {
+                    return {
+                        name: s.name || ('الموسم ' + s.season_number),
+                        year: (s.air_date || year).substring(0,4),
+                        eps: [],
+                        episode_count: s.episode_count || 0
+                    };
+                });
+                if (seasons.length === 0) {
+                    seasonsList.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">لا توجد بيانات مواسم</div>';
+                    return;
+                }
+
+                seasonsList.innerHTML = '';
+                var listDiv = document.createElement('div');
+                listDiv.className = 'admin-seasons-list';
+
+                seasons.forEach(function(s, si) {
+                    var epCount = s.episode_count || 0;
+                    var seasonName = s.name || ('الموسم ' + s.season_number);
+                    var seasonYear = (s.air_date || year).substring(0,4);
+
+                    var row = document.createElement('div');
+                    row.className = 'admin-season-row';
+
+                    var header = document.createElement('div');
+                    header.className = 'admin-season-header';
+                    header.innerHTML =
+                        '<div class="admin-season-name">📺 ' + seasonName + '</div>' +
+                        '<div class="admin-season-eps-count">الحلقات: <span>' + epCount + '</span></div>' +
+                        '<div class="admin-season-eps-count" style="color:rgba(255,255,255,0.3)">' + seasonYear + '</div>' +
+                        '<div class="admin-season-toggle">▼</div>';
+
+                    var body = document.createElement('div');
+                    body.className = 'admin-season-body';
+
+                    var grid = document.createElement('div');
+                    grid.className = 'admin-eps-grid';
+
+                    for (var ei = 1; ei <= epCount; ei++) {
+                        var epRow = document.createElement('div');
+                        epRow.className = 'admin-ep-row';
+                        epRow.innerHTML =
+                            '<div class="admin-ep-num">ح ' + ei + '</div>' +
+                            '<input type="text" class="admin-ep-input" data-season="' + si + '" data-ep="' + (ei-1) + '" placeholder="رابط embed الحلقة ' + ei + '">';
+                        grid.appendChild(epRow);
+                    }
+
+                    var pasteBtn = document.createElement('button');
+                    pasteBtn.className = 'admin-season-paste-btn';
+                    pasteBtn.textContent = '📋 لصق روابط دفعة واحدة (سطر لكل حلقة)';
+                    pasteBtn.setAttribute('data-season', si);
+                    pasteBtn.addEventListener('click', function() {
+                        var sIdx = parseInt(this.getAttribute('data-season'));
+                        var text = prompt('الصق الروابط — رابط واحد في كل سطر:');
+                        if (!text) return;
+                        var urls = text.trim().split('\n').map(function(u){ return u.trim(); }).filter(Boolean);
+                        var inputs = grid.querySelectorAll('.admin-ep-input');
+                        urls.forEach(function(url, i) { if (inputs[i]) inputs[i].value = url; });
+                    });
+
+                    body.appendChild(grid);
+                    body.appendChild(pasteBtn);
+
+                    header.addEventListener('click', function() {
+                        var toggle = this.querySelector('.admin-season-toggle');
+                        var b = this.nextElementSibling;
+                        var isOpen = b.classList.contains('open');
+                        b.classList.toggle('open', !isOpen);
+                        toggle.classList.toggle('open', !isOpen);
+                    });
+
+                    row.appendChild(header);
+                    row.appendChild(body);
+                    listDiv.appendChild(row);
+                });
+
+                var summary = document.createElement('div');
+                summary.style.cssText = 'font-size:12px;color:var(--text-muted);margin-top:4px;';
+                summary.innerHTML = 'إجمالي: <span style="color:#4caf7d;font-weight:700;">' + seasons.length + ' موسم · ' + seasons.reduce(function(t,s){ return t+(s.episode_count||0); },0) + ' حلقة</span>';
+
+                seasonsList.appendChild(listDiv);
+                seasonsList.appendChild(summary);
+            }).catch(function() {
+                seasonsList.innerHTML = '<div style="color:#e55;font-size:12px;">تعذر تحميل بيانات المواسم</div>';
+            });
+        }
+
         document.getElementById('adminPanel').scrollTo({top: document.getElementById('adminFormSection').offsetTop - 80, behavior:'smooth'});
     }
+
+    document.getElementById('adminTypeSelect').addEventListener('change', function() {
+        var isSeries = this.value === 'مسلسلات';
+        document.getElementById('adminSeasonsSection').style.display = isSeries ? 'block' : 'none';
+        if (adminSelected) adminSelected.type = isSeries ? 'tv' : 'movie';
+    });
 
     document.getElementById('adminAddBtn').addEventListener('click', function() {
         if (!adminSelected) return;
         var embedUrl = document.getElementById('adminEmbedUrl').value.trim();
         var category = document.getElementById('adminCategory').value;
         var featured = document.getElementById('adminFeatured').value === 'true';
-        var type = adminSelected.type === 'movie' ? 'أفلام' : 'مسلسلات';
-        var seasonsCount = parseInt(document.getElementById('adminSeasonsCount').value) || 1;
+        var type = document.getElementById('adminTypeSelect').value;
         var obj = {
             title: adminSelected.title,
             url: embedUrl || 'https:' + '//' + 'example.com',
@@ -1177,9 +1335,19 @@
             featured: featured
         };
         if (type === 'مسلسلات') {
-            obj.seasons = [];
-            for (var s = 1; s <= seasonsCount; s++) {
-                obj.seasons.push({name: 'الموسم ' + (s===1?'الأول':s===2?'الثاني':s===3?'الثالث':'رقم '+s), year: adminSelected.year, eps: []});
+            if (adminSelected.seasons && adminSelected.seasons.length > 0) {
+                obj.seasons = adminSelected.seasons.map(function(s, si) {
+                    var eps = [];
+                    var inputs = document.querySelectorAll('.admin-ep-input[data-season="' + si + '"]');
+                    inputs.forEach(function(inp) {
+                        var val = inp.value.trim();
+                        eps.push(val || '');
+                    });
+                    var hasAny = eps.some(function(e){ return e !== ''; });
+                    return { name: s.name, year: s.year, eps: hasAny ? eps : [] };
+                });
+            } else {
+                obj.seasons = [{name:'الموسم الأول', year:adminSelected.year, eps:[]}];
             }
         }
         adminAdded.push(obj);
@@ -1190,6 +1358,7 @@
             buildSlider();
         }
         renderGrid();
+        buildTicker();
 
         renderAdminAdded();
         document.getElementById('adminFormSection').style.display = 'none';
@@ -1198,9 +1367,21 @@
         document.getElementById('tmdbSearchInput').value = '';
 
         var btn = document.getElementById('adminAddBtn');
-        btn.textContent = '✓ تمت الإضافة!';
-        btn.style.background = '#4caf7d';
-        setTimeout(function(){ btn.textContent = '✚ إضافة للقائمة'; btn.style.background = ''; }, 2000);
+        btn.textContent = '⏳ جاري الحفظ...';
+        btn.style.background = '#888';
+        btn.disabled = true;
+
+        saveToSheet(obj).then(function(ok) {
+            btn.disabled = false;
+            if (ok) {
+                btn.textContent = '✓ تم الحفظ في Sheets!';
+                btn.style.background = '#4caf7d';
+            } else {
+                btn.textContent = '⚠ خطأ في الحفظ';
+                btn.style.background = '#e55';
+            }
+            setTimeout(function(){ btn.textContent = '✚ إضافة للقائمة'; btn.style.background = ''; }, 3000);
+        });
     });
 
     document.getElementById('adminCancelForm').addEventListener('click', function() {
@@ -1242,6 +1423,31 @@
         });
         document.getElementById('adminExportBox').value = lines.join(',\n');
     });
+
+    async function saveToSheet(item) {
+        try {
+            var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPApj4ucuMl0jUkh7o_Xg5kjCkXJVRex5OtPsqGWevtLGz_wXHiMQ7ThpiadSTpufs/exec';
+            var params = new URLSearchParams({
+                title: item.title || '',
+                url: item.url || '',
+                poster: item.poster || '',
+                category: item.category || '',
+                type: item.type || '',
+                year: item.year || '',
+                description: item.description || '',
+                featured: item.featured ? 'true' : 'false',
+                seasons: item.seasons ? JSON.stringify(item.seasons) : ''
+            });
+            await fetch(APPS_SCRIPT_URL + '?' + params.toString(), {
+                method: 'GET',
+                mode: 'no-cors'
+            });
+            return true;
+        } catch(e) {
+            console.error('saveToSheet error:', e);
+            return false;
+        }
+    }
 
 })();
 </script>
